@@ -1,53 +1,83 @@
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import client from "../sanityClient";
 
-export default function Index() {
-  const data = [
-    { title: "Internship results for Google1", students: ["Student 1 (CSE)", "Student 2 (MnC)", "Student 3 (CSE)"] },
-    { title: "Internship results for Google2", students: ["Student 2 (CSE)", "Student 3 (MnC)", "Student 4 (CSE)"] },
-    { title: "Internship results for Google3", students: ["Student 3 (CSE)", "Student 4 (MnC)", "Student 5 (CSE)"] },
-    { title: "Internship results for Google4", students: ["Student 4 (CSE)", "Student 5 (MnC)", "Student 6 (CSE)"] },
-  ];
+// // Configure Sanity Client
+// const client = sanityClient({
+//   projectId: "zltsypm6", // Your Sanity project ID
+//   dataset: "production", // Dataset name
+  
+//   useCdn: true, // Use the Sanity CDN for faster response times
+// });
+
+export default function Index({ navigation }: { navigation: any }) {
+  const [placementData, setPlacementData] = useState<any[]>([]);
+
+  
+  useEffect(() => {
+    const fetchPlacements = async () => {
+      try {
+        const data = await client.fetch(`
+          *[_type == "placement"] {
+            ...
+          }
+        `);
+        console.log(data);
+        setPlacementData(data);
+      } catch (error) {
+        console.error("Error fetching data from Sanity:", error);
+      }
+    };
+
+    fetchPlacements();
+  }, []);
+
+  const navigateTo = (page: string) => {
+    navigation.navigate(page); 
+  };
 
   return (
-    <View style={styles.container} >
-      {/* Header */}
-      <View style={styles.header}>
-        <Ionicons name="filter-outline" size={24} color="black" />
-        <Text style={styles.title}>Placement Daemon</Text>
-        <View style={styles.icons}>
-          <Ionicons name="search-outline" size={24} color="black" style={styles.icon} />
-          <Ionicons name="notifications-outline" size={24} color="black" />
-        </View>
-      </View>
-
+    <View style={styles.container}>
       {/* Tabs */}
       <View style={styles.tabs}>
-        <Text style={[styles.tab, styles.activeTab]}>All</Text>
-        <Text style={styles.tab}>Placements</Text>
-        <Text style={styles.tab}>Company-Wise</Text>
-        <Text style={styles.tab}>Branch-Wise</Text>
+        <TouchableOpacity onPress={() => navigateTo("AllPlacements")}>
+          <Text style={[styles.tab, styles.activeTab]}>All Placements</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigateTo("CompanyWise")}>
+          <Text style={styles.tab}>Company-Wise</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigateTo("BranchWise")}>
+          <Text style={styles.tab}>Branch-Wise</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Filters */}
       <View style={styles.filters}>
-        <Text style={[styles.filter, styles.activeFilter]}>Both</Text>
-        <Text style={styles.filter}>Role</Text>
-        <Text style={styles.filter}>Off Campus</Text>
+        <TouchableOpacity onPress={() => navigateTo("Role")}>
+          <Text style={[styles.filter, styles.activeFilter]}>Role</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigateTo("OnCampus")}>
+          <Text style={styles.filter}>On Campus</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigateTo("OffCampus")}>
+          <Text style={styles.filter}>Off Campus</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Cards */}
       <ScrollView>
-        {data.map((item, index) => (
+        {placementData.map((item, index) => (
           <View key={index} style={styles.card}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>On Campus</Text>
-            {item.students.map((student, idx) => (
-              <Text key={idx} style={styles.student}>{`${idx + 1}. ${student}`}</Text>
+            <Text style={styles.cardTitle}>{item.companyName}</Text>
+            <Text style={styles.cardSubtitle}>{item.role}</Text>
+            {item.students.map((student: any, idx: number) => (
+              // <Text key={idx} style={styles.student}>
+              //   {${idx + 1}. ${student.name} ${student.branch}}
+              // </Text>
+              <Text key={idx} style={styles.student}>{`${idx + 1}. ${student.name}`}</Text>
             ))}
             <Text style={styles.congrats}>Congratulations to all!</Text>
-            {/* general text "placement Daemon" */}
-            <Text style={styles.placementDaemon}>Placement Daemon</Text>
 
             {/* Icons */}
             <View style={styles.cardIcons}>
@@ -58,7 +88,7 @@ export default function Index() {
                 <Ionicons name="bookmark-outline" size={20} color="black" />
               </TouchableOpacity>
               <TouchableOpacity>
-                <MaterialIcons name="language" size={20} color="black" />
+                <Ionicons name="language" size={20} color="black" />
               </TouchableOpacity>
             </View>
           </View>
@@ -70,18 +100,6 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "white",
-    elevation: 2,
-  },
-  title: { fontSize: 18, fontWeight: "bold" },
-  icons: { flexDirection: "row" },
-  icon: { marginRight: 16 },
-
   tabs: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -115,9 +133,6 @@ const styles = StyleSheet.create({
   cardSubtitle: { fontSize: 14, color: "gray", marginBottom: 8 },
   student: { fontSize: 14, marginBottom: 4 },
   congrats: { fontSize: 14, fontWeight: "bold", marginTop: 8 },
-  placementDaemon: { fontSize: 12, marginTop: 8, color: "gray" },
-  footer: { fontSize: 12, color: "gray", marginTop: 8 },
-
   cardIcons: {
     flexDirection: "row",
     justifyContent: "flex-end",

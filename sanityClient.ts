@@ -1,11 +1,11 @@
 // /services/sanityClient.ts
-import sanityClient from "@sanity/client";
+import { createClient } from '@sanity/client';
 
-const client = sanityClient({
-    projectId: "zltsypm6",
-    dataset:"production",
-    useCdn:true,
-    apiVersion:"2022-12-23",
-  });
+const client = createClient({
+  projectId: 'zltsypm6',  
+  dataset: 'production',         
+  useCdn: true,                  
+  apiVersion: '2022-12-23',      
+});
 
 export default client;
